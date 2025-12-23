@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>我們的雲端交換禮物 (輕量版)</title>
+<style>
+  /* --- 基礎設定 --- */
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: #fdf2f2;
+    color: #333;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+    touch-action: manipulation;
+  }
+
+  h1 { color: #d6336c; margin-bottom: 10px;}
+  h2 { color: #444; font-size: 1.2rem; margin-top: 0; }
+  p.desc { font-size:0.9rem; color:#666; margin: 5px 0 15px 0; }
+
+  /* --- 容器與區塊 --- */
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 25px;
+    border-radius: 25px;
+    box-shadow: 0 10px 30px rgba(214, 51, 108, 0.15);
+  }
+
+  .input-section {
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 2px dashed #ffd1dc;
+    transition: all 0.3s ease;
+  }
+
+  /* --- 輸入元件優化 --- */
+  textarea, input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    margin-top: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+  }
+  
+  textarea:focus, input[type="text"]:focus {
+    border-color: #ff9a9e;
+    outline: none;
+  }
+
+  textarea { height: 80px; resize: vertical; }
+
+  .image-options {
+    text-align: left;
+    background: #fff9fa;
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 15px;
+    border: 1px solid #ffe0e6;
+  }
+  
+  .image-option-title { font-weight: bold; color: #d6336c; margin-bottom: 5px; display: block;}
+  .tip-text { font-size: 0.85rem; color: #999; margin-bottom: 8px; }
+
+  /* --- 按鈕優化 --- */
+  button {
+    background: linear-gradient(45deg, #d6336c, #ff9a9e);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 5px 15px rgba(214, 51, 108, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    width: 80%;
+    max-width: 300px;
+  }
+  button:hover { box-shadow: 0 8px 20px rgba(214, 51, 108, 0.4); transform: translateY(-2px);}
+  button:active { transform: scale(0.98); box-shadow: 0 2px 10px rgba(214, 51, 108, 0.2);}
+  
+  button.secondary { 
+    background: #888; 
+    font-size: 0.9rem; 
+    padding: 10px 20px; 
+    width: auto; 
+    box-shadow: none;
+    margin-top: 10px;
+  }
+  
+  button.reset-btn {
+      background: linear-gradient(45deg, #4facfe, #00f2fe);
+      margin-top: 30px;
+      display: none;
+  }
+
+  /* --- 密碼顯示區 --- */
+  .code-display {
+    background: #eee;
+    padding: 15px;
+    word-break: break-all;
+    font-family: monospace;
+    margin: 15px 0;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    max-height: 100px;
+    overflow-y: auto;
+    border: 2px solid #ddd;
+  }
+
+  /* --- 卡片桌面 --- */
+  .table-section {
+    display: none;
+    perspective: 1000px;
+    margin-top: 20px;
+  }
+
+  .cards-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  /* --- 卡片樣式 (維持大卡片) --- */
+  .card {
+    background-color: transparent;
+    width: 220px; 
+    height: 350px;
+    perspective: 1000px;
+  }
+
+  .card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    border-radius: 20px;
+  }
+
+  .card.flipped .card-inner {
+    transform: rotateY(180deg);
+  }
+
+  .card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .card-front {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    border: 4px solid white;
+  }
+  .card-front span { font-size: 4rem; margin-bottom: 15px; display: block; }
+  .card-front h3 { margin: 0; font-size: 1.5rem; }
+
+  /* 卡片背面樣式 */
+  .card-back {
+    background-color: white;
+    color: #333;
+    transform: rotateY(180deg);
+    border: 3px solid #ff9a9e;
+    overflow-y: auto;
+    justify-content: flex-start;
+    padding-top: 20px;
+  }
+
+  .card-back-title {
+      font-size: 1rem;
+      color: #999;
+      margin: 0 0 10px 0;
+      flex-shrink: 0;
+  }
+
+  .gift-content {
+    font-size: 1.1rem;
+    font-weight: bold;
+    word-break: break-word;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* 圖片樣式 */
+  .gift-img {
+      max-width: 100%;
+      max-height: 180px; 
+      border-radius: 8px;
+      margin-top: 0; 
+      margin-bottom: 15px;
+      border: 2px solid #eee;
+      object-fit: cover;
+      flex-shrink: 0;
+  }
+
+  .gift-text-p {
+      margin: 5px 0;
+      line-height: 1.4;
+  }
+
+  #countdown {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #d6336c;
+    height: 60px;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 0px #ffd1dc;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🎁 雲端交換禮物 🎁</h1>
+  
+  <div class="input-section" id="step1">
+    <h2>Step 1：包裝你的心意</h2>
+    <p class="desc">寫下禮物內容，也可以附上網路上找到的圖片網址。</p>
+    
+    <textarea id="myGiftText" placeholder="請輸入文字，例如：家事兌換券、愛的抱抱..."></textarea>
+    
+    <div class="image-options">
+        <span class="image-option-title">📷 (選填) 加上圖片：</span>
+        <div class="tip-text">去 Google 搜尋圖片 -> 長按圖片 -> 選擇「複製圖片位址」</div>
+        <input type="text" id="imageUrlInput" placeholder="貼上圖片網址 (https://...)">
+    </div>
+
+    <br>
+    <button id="generateBtn" onclick="generateCode()">📦 包裝禮物 (產生密碼)</button>
+    
+    <div id="resultArea" style="display:none;">
+      <p style="font-weight:bold; margin-top:20px;">👇 這是你的禮物密碼，複製傳給對方：</p>
+      <div class="code-display" id="myCodeDisplay"></div>
+      <button class="secondary" onclick="copyCode()">複製密碼</button>
+    </div>
+  </div>
+
+  <div class="input-section" id="step2">
+    <h2>Step 2：準備開牌</h2>
+    <p class="desc">收到對方的密碼了嗎？把兩組密碼都貼上來。</p>
+    <input type="text" id="codeA" placeholder="貼上 你的 禮物密碼">
+    <input type="text" id="codeB" placeholder="貼上 對方 的禮物密碼">
+    <br>
+    <button onclick="prepareTable()">🎲 擺上桌子 (準備就緒)</button>
+  </div>
+
+  <div class="table-section" id="tableSection">
+    <div id="countdown">準備...</div>
+    
+    <div class="cards-container">
+      <div class="card" id="cardA">
+        <div class="card-inner">
+          <div class="card-front">
+            <span>🎁</span><h3>我的禮物</h3>
+          </div>
+          <div class="card-back">
+            <p class="card-back-title">我送的是：</p>
+            <div class="gift-content" id="revealAContent"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="cardB">
+        <div class="card-inner">
+          <div class="card-front">
+            <span>🎁</span><h3>對方的禮物</h3>
+          </div>
+          <div class="card-back">
+            <p class="card-back-title">你得到的是：</p>
+            <div class="gift-content" id="revealBContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <br>
+    <button id="startRevealBtn" onclick="startReveal()">🔥 開始交換 (倒數開牌) 🔥</button>
+    
+    <button class="reset-btn" id="resetBtn" onclick="resetGame()">🔄 再玩一次</button>
+  </div>
+
+</div>
+
+<script>
+  // --- 工具函數 ---
+
+  function encodeGift(str) {
+    try {
+      return btoa(encodeURIComponent(str));
+    } catch (e) {
+      alert("編碼失敗，請檢查輸入內容");
+      return "";
+    }
+  }
+
+  function decodeGift(code) {
+    try {
+      return decodeURIComponent(atob(code));
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  // --- 主要功能函數 ---
+
+  function generateCode() {
+    const textInput = document.getElementById('myGiftText').value;
+    const urlInput = document.getElementById('imageUrlInput').value;
+    
+    if (!textInput && !urlInput) {
+      alert("請至少輸入文字，或提供一張圖片連結喔！");
+      return;
+    }
+
+    // 資料結構變簡單了，只剩下文字和網址
+    const giftData = {
+        text: textInput,
+        imgUrl: urlInput
+    };
+    
+    const jsonString = JSON.stringify(giftData);
+    const code = encodeGift(jsonString);
+    
+    if (code) {
+        document.getElementById('myCodeDisplay').innerText = code;
+        document.getElementById('resultArea').style.display = 'block';
+        setTimeout(() => {
+             document.getElementById('resultArea').scrollIntoView({behavior: "smooth"});
+        }, 100);
+    }
+  }
+
+  function copyCode() {
+    const code = document.getElementById('myCodeDisplay').innerText;
+    if (!code) return;
+    
+    navigator.clipboard.writeText(code).then(() => {
+      alert("密碼已複製！現在很短，很好傳送！");
+    }).catch(err => {
+      alert("複製失敗，請手動全選複製。");
+    });
+  }
+
+  // 產生卡片 HTML：圖片在上，文字在下
+  function generateCardHTML(giftData) {
+      let html = "";
+      
+      // 1. 圖片
+      if (giftData.imgUrl) {
+          html += `<img src="${giftData.imgUrl}" class="gift-img" alt="禮物圖片" onerror="this.style.display='none';alert('圖片無法載入，可能網址有誤')">`;
+      }
+
+      // 2. 文字
+      if (giftData.text) {
+          html += `<p class="gift-text-p">${giftData.text.replace(/\n/g, '<br>')}</p>`;
+      }
+      
+      return html;
+  }
+
+  // 準備桌子
+  function prepareTable() {
+    const codeA = document.getElementById('codeA').value.trim();
+    const codeB = document.getElementById('codeB').value.trim();
+
+    if (!codeA || !codeB) {
+      alert("請填寫雙方的禮物密碼！");
+      return;
+    }
+
+    const decodedA = decodeGift(codeA);
+    const decodedB = decodeGift(codeB);
+
+    if (decodedA === null || decodedB === null) {
+        alert("密碼格式錯誤，請確認是否複製完整！");
+        return;
+    }
+
+    try {
+        const giftObjA = JSON.parse(decodedA);
+        const giftObjB = JSON.parse(decodedB);
+        
+        document.getElementById('revealAContent').innerHTML = generateCardHTML(giftObjA);
+        document.getElementById('revealBContent').innerHTML = generateCardHTML(giftObjB);
+
+    } catch (e) {
+        // 舊版相容
+        document.getElementById('revealAContent').innerHTML = `<p class="gift-text-p">${decodedA}</p>`;
+        document.getElementById('revealBContent').innerHTML = `<p class="gift-text-p">${decodedB}</p>`;
+    }
+
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('tableSection').style.display = 'block';
+    document.getElementById('countdown').innerText = "準備...";
+    document.getElementById('startRevealBtn').style.display = 'inline-block';
+    document.getElementById('resetBtn').style.display = 'none';
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 倒數開牌
+  function startReveal() {
+    const countdownEl = document.getElementById('countdown');
+    let count = 3;
+    
+    document.getElementById('startRevealBtn').style.display = 'none';
+    countdownEl.innerText = count;
+    
+    const timer = setInterval(() => {
+      count--;
+      if (count > 0) {
+        countdownEl.innerText = count;
+      } else {
+        clearInterval(timer);
+        countdownEl.innerText = "🎉 開牌！";
+        
+        document.getElementById('cardA').classList.add('flipped');
+        document.getElementById('cardB').classList.add('flipped');
+        
+        document.body.style.background = "#fff0f5";
+        
+        setTimeout(() => {
+            document.getElementById('resetBtn').style.display = 'inline-block';
+        }, 1000);
+      }
+    }, 1000);
+  }
+  
+  // 重置遊戲
+  function resetGame() {
+      document.getElementById('cardA').classList.remove('flipped');
+      document.getElementById('cardB').classList.remove('flipped');
+      document.body.style.background = "#fdf2f2";
+      
+      setTimeout(() => {
+          document.getElementById('myGiftText').value = "";
+          document.getElementById('imageUrlInput').value = "";
+          document.getElementById('myCodeDisplay').innerText = "";
+          document.getElementById('resultArea').style.display = 'none';
+          document.getElementById('codeA').value = "";
+          document.getElementById('codeB').value = "";
+          document.getElementById('revealAContent').innerHTML = "";
+          document.getElementById('revealBContent').innerHTML = "";
+          
+          document.getElementById('tableSection').style.display = 'none';
+          document.getElementById('step1').style.display = 'block';
+          document.getElementById('step2').style.display = 'block';
+          
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          
+      }, 600);
+  }
+</script>
+
+</body>
+</html>
